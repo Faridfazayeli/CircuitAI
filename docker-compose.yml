@@ -1,0 +1,50 @@
+﻿version: '3.8'
+
+services:
+  api:
+    build: ./src/backend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgres://postgres:password@postgres:5432/circuitai
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - postgres
+      - redis
+
+  ai-service:
+    build: ./src/ai
+    ports:
+      - "5000:5000"
+    environment:
+      - MODEL_PATH=/models
+    volumes:
+      - ./models:/models
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=circuitai
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  frontend:
+    build: ./src/frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+volumes:
+  postgres-data:
+  redis-data:
